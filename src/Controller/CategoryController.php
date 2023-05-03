@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
@@ -56,7 +57,6 @@ class CategoryController extends AbstractController
             }
 
             // On regarde si la clé 'roles' existe et si l'utilisateur possède le bon rôle
-
             if($decoded->roles != null  && in_array('ROLE_USER', $decoded->roles)){
 
                 $category = new Category();
@@ -133,5 +133,33 @@ class CategoryController extends AbstractController
         $em->flush();
 
         return new JsonResponse('Catégorie supprimée', 204);
+    }
+
+    #[Route('/file', name:'upload_file', methods:['POST'])]
+    public function fichier(Request $r): Response
+    {
+        // Récupération du fichier
+        $image = $r->files->get('image');
+
+        if ($image) {
+            $newFilename = uniqid().'.'.$image->guessExtension();
+
+            // Move the file to the directory where brochures are stored
+            try {
+                $image->move(
+                    $this->getParameter('upload_directory'),
+                    $newFilename
+                );
+            } catch (FileException $e) {
+                // ... handle exception if something happens during file upload
+                return new JsonResponse($e->getMessage(), 400);
+            }
+
+            // updates the 'brochureFilename' property to store the PDF file name
+            // instead of its contents
+            return new JsonResponse('Fichier uploadé', 200);
+        }
+
+        return new JsonResponse('Aucun fichier reçu', 200);
     }
 }
