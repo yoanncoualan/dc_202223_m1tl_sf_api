@@ -56,7 +56,8 @@ class CategoryController extends AbstractController
             }
 
             // On regarde si la clé 'roles' existe et si l'utilisateur possède le bon rôle
-            if($decoded->roles != null  && $decoded->roles == 'ROLE_ADMIN'){
+
+            if($decoded->roles != null  && in_array('ROLE_USER', $decoded->roles)){
 
                 $category = new Category();
                 $category->setName($r->get('name')); // Récupère le paramètre 'name' de la requête et l'assigne à l'objet
